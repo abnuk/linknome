@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Linknome",
-  "version": "0.1.5",
-  "identifier": "com.pragmile.linknome",
+  "version": "1.0.0",
+  "identifier": "com.abnuk.linknome",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
@@ -45,7 +45,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "copyright": "Copyright © 2026 Pragmile. Licensed under GPL-2.0-or-later.",
+    "copyright": "Copyright © 2026 abnuk. Licensed under GPL-2.0-or-later.",
     "category": "Music",
     "shortDescription": "Ableton Link tempo & meter remote",
     "longDescription": "Small always-on-top remote for controlling the tempo and meter (beats-per-bar / Link quantum) of an Ableton Link session over WiFi."

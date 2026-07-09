@@ -1,6 +1,6 @@
 {
   "name": "linknome",
-  "version": "0.1.5",
+  "version": "1.0.0",
   "description": "Ableton Link tempo & meter remote",
   "license": "GPL-2.0-or-later",
   "type": "module",
