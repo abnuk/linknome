@@ -1,5 +1,5 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { LogicalSize, LogicalPosition } from "@tauri-apps/api/dpi";
+import { LogicalSize, PhysicalPosition } from "@tauri-apps/api/dpi";
 
 import {
   commitTempo,
@@ -333,18 +333,24 @@ el("statusbar").addEventListener("pointerdown", async (e) => {
   }
 
   // Touch / pen: follow the finger by repositioning the window.
+  // Work in PHYSICAL pixels with the browser's devicePixelRatio so the move
+  // is 1:1 regardless of Tauri's internal scale factor. Also drop the blur /
+  // transparency while moving — a layered (transparent + backdrop-filter)
+  // window flickers badly when repositioned rapidly on Windows.
   const bar = e.currentTarget;
   bar.setPointerCapture(e.pointerId);
   e.preventDefault();
+  panel.classList.add("moving");
   const dpr = window.devicePixelRatio || 1;
   const startSX = e.screenX;
   const startSY = e.screenY;
-  let ox, oy; // window origin in logical (CSS) pixels
+  let wx, wy; // window origin in physical pixels
   try {
     const p = await appWindow.outerPosition();
-    ox = p.x / dpr;
-    oy = p.y / dpr;
+    wx = p.x;
+    wy = p.y;
   } catch {
+    panel.classList.remove("moving");
     return;
   }
   let raf = 0;
@@ -353,7 +359,12 @@ el("statusbar").addEventListener("pointerdown", async (e) => {
     raf = 0;
     if (!latest) return;
     appWindow
-      .setPosition(new LogicalPosition(ox + (latest.screenX - startSX), oy + (latest.screenY - startSY)))
+      .setPosition(
+        new PhysicalPosition(
+          Math.round(wx + (latest.screenX - startSX) * dpr),
+          Math.round(wy + (latest.screenY - startSY) * dpr),
+        ),
+      )
       .catch(() => {});
   };
   const onMove = (ev) => {
@@ -367,6 +378,7 @@ el("statusbar").addEventListener("pointerdown", async (e) => {
     bar.removeEventListener("pointerup", end);
     bar.removeEventListener("pointercancel", end);
     if (raf) cancelAnimationFrame(raf);
+    panel.classList.remove("moving");
     try {
       bar.releasePointerCapture(e.pointerId);
     } catch {}

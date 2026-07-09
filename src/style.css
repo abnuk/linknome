@@ -47,6 +47,13 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
+/* While being dragged by touch: opaque + no blur, to avoid the heavy flicker
+   of moving a transparent/blurred layered window on Windows. Restored on drop. */
+.panel.moving {
+  background: rgb(var(--bg));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
 
 /* ---- Status bar ----------------------------------------------------- */
 .statusbar {
