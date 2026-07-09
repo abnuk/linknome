@@ -318,6 +318,15 @@ el("btn-lang").addEventListener("click", () => {
   persistSoon();
 });
 
+// Drag the window by its top bar — works for mouse, touch AND pen.
+// `data-tauri-drag-region` relies on mousedown, which WebView2 does not fire
+// reliably for touch on Windows, so we start the OS drag explicitly here.
+el("statusbar").addEventListener("pointerdown", (e) => {
+  if (e.target.closest("button")) return; // let the icon buttons work
+  if (e.pointerType === "mouse" && e.button !== 0) return; // primary button only
+  appWindow.startDragging().catch(() => {});
+});
+
 // Prevent context menu / browser zoom gestures in the shipped app
 window.addEventListener("contextmenu", (e) => e.preventDefault());
 

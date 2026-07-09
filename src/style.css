@@ -57,6 +57,7 @@ body {
   justify-content: space-between;
   padding: 0 6px 0 12px;
   border-bottom: 1px solid var(--line);
+  touch-action: none; /* let pointerdown start the window drag, not a pan */
 }
 
 .status-left {

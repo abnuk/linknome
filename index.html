@@ -11,11 +11,12 @@
   </head>
   <body>
     <div id="app" class="panel" data-mode="expanded">
-      <!-- Status bar doubles as the window drag handle -->
-      <header class="statusbar" data-tauri-drag-region>
-        <div class="status-left" data-tauri-drag-region>
+      <!-- Status bar is the window drag handle (drag started in JS via
+           startDragging so it works with touch/pen, not just mouse). -->
+      <header class="statusbar" id="statusbar">
+        <div class="status-left">
           <span id="link-dot" class="dot" title="Link"></span>
-          <span id="peers-label" class="peers" data-tauri-drag-region>—</span>
+          <span id="peers-label" class="peers">—</span>
         </div>
         <div class="status-right">
           <button id="btn-lang" class="icon-btn lang" title="Język / Language">PL</button>
