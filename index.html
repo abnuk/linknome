@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Linknome</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app" class="panel" data-mode="expanded">
+      <!-- Status bar doubles as the window drag handle -->
+      <header class="statusbar" data-tauri-drag-region>
+        <div class="status-left" data-tauri-drag-region>
+          <span id="link-dot" class="dot" title="Link"></span>
+          <span id="peers-label" class="peers" data-tauri-drag-region>—</span>
+        </div>
+        <div class="status-right">
+          <button id="btn-lang" class="icon-btn lang" title="Język / Language">PL</button>
+          <button id="btn-ontop" class="icon-btn is-on" title="Zawsze na wierzchu">📌</button>
+          <button id="btn-opacity" class="icon-btn" title="Przezroczystość">◐</button>
+          <button id="btn-compact" class="icon-btn" title="Kompaktowo / pełny">⤢</button>
+          <button id="btn-close" class="icon-btn close" title="Zamknij">✕</button>
+        </div>
+      </header>
+
+      <!-- Tempo: big scrub surface flanked by step buttons -->
+      <section class="tempo">
+        <button id="btn-minus" class="step-btn" aria-label="Wolniej">−</button>
+
+        <div id="scrub" class="scrub" role="slider" aria-label="Tempo" tabindex="0">
+          <div class="bpm-row">
+            <span id="bpm-value" class="bpm-value">120</span>
+            <span class="bpm-unit">BPM</span>
+          </div>
+          <input
+            id="bpm-input"
+            class="bpm-input hidden"
+            inputmode="numeric"
+            aria-label="Wpisz tempo"
+          />
+          <div id="scrub-hint" class="scrub-hint">przeciągnij ←→ · dalej = szybciej</div>
+          <div class="precision" aria-hidden="true">
+            <span class="precision-cap">−</span>
+            <div class="precision-track">
+              <div class="precision-center"></div>
+              <div id="precision-fill" class="precision-fill"></div>
+            </div>
+            <span class="precision-cap">+</span>
+          </div>
+        </div>
+
+        <button id="btn-plus" class="step-btn" aria-label="Szybciej">+</button>
+      </section>
+
+      <!-- Bottom controls: meter + tap -->
+      <section class="controls">
+        <div class="meter" title="Beats per bar (Link quantum) — lokalne wyrównanie fazy">
+          <span class="meter-label">METRUM</span>
+          <button id="meter-dec" class="meter-btn" aria-label="Mniej uderzeń">‹</button>
+          <span id="meter-value" class="meter-value">4</span>
+          <button id="meter-inc" class="meter-btn" aria-label="Więcej uderzeń">›</button>
+        </div>
+        <button id="btn-tap" class="tap-btn">TAP</button>
+      </section>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

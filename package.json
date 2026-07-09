@@ -1,0 +1,21 @@
+{
+  "name": "linknome",
+  "version": "0.1.0",
+  "description": "Ableton Link tempo & meter remote",
+  "license": "GPL-2.0-or-later",
+  "type": "module",
+  "packageManager": "pnpm@11.10.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "vite": "^6"
+  }
+}

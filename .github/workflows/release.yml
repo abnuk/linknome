@@ -1,0 +1,67 @@
+name: Release
+
+# Push a tag like v0.1.0 to build installers for macOS (Apple Silicon +
+# Intel) and Windows, and attach them to a draft GitHub Release.
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: "macos-latest" # Apple Silicon (arm64) -> .dmg/.app
+          - platform: "macos-13" # Intel (x86_64) -> .dmg/.app
+          - platform: "windows-latest" # -> .msi + .exe (NSIS)
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      # rusty_link builds Ableton's abl_link (C++) via CMake. CMake and the
+      # platform C++ toolchain (MSVC / Xcode CLT) are preinstalled on the
+      # GitHub-hosted macOS and Windows runners.
+      - name: Install frontend dependencies
+        run: pnpm install
+
+      - name: Build app and publish release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "Linknome ${{ github.ref_name }}"
+          releaseBody: |
+            Ableton Link tempo & meter remote.
+
+            Download the installer for your platform:
+            - **macOS Apple Silicon**: `..._aarch64.dmg`
+            - **macOS Intel**: `..._x64.dmg`
+            - **Windows**: `..._x64-setup.exe` (NSIS) or `..._x64_en-US.msi`
+
+            Note: builds are unsigned. On macOS, right-click the app and choose *Open* the first time (or `xattr -cr /Applications/Linknome.app`). On Windows, click *More info → Run anyway* in SmartScreen.
+          releaseDraft: true
+          prerelease: false
