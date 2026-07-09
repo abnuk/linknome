@@ -1,6 +1,6 @@
 [package]
 name = "linknome"
-version = "0.1.1"
+version = "0.1.2"
 description = "Linknome — Ableton Link tempo & meter remote"
 authors = ["Pragmile"]
 edition = "2021"

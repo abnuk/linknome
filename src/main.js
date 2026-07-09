@@ -1,5 +1,5 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { LogicalSize } from "@tauri-apps/api/dpi";
+import { LogicalSize, LogicalPosition } from "@tauri-apps/api/dpi";
 
 import {
   commitTempo,
@@ -318,13 +318,62 @@ el("btn-lang").addEventListener("click", () => {
   persistSoon();
 });
 
-// Drag the window by its top bar — works for mouse, touch AND pen.
-// `data-tauri-drag-region` relies on mousedown, which WebView2 does not fire
-// reliably for touch on Windows, so we start the OS drag explicitly here.
-el("statusbar").addEventListener("pointerdown", (e) => {
+// Drag the window by its top bar.
+// - Mouse: native OS drag (smooth, supports Aero snap).
+// - Touch / pen: move the window manually via setPosition, because Windows /
+//   WebView2 does NOT drive startDragging()'s OS move-loop from touch input
+//   (tauri-apps/tauri#4746 — no upstream fix).
+el("statusbar").addEventListener("pointerdown", async (e) => {
   if (e.target.closest("button")) return; // let the icon buttons work
-  if (e.pointerType === "mouse" && e.button !== 0) return; // primary button only
-  appWindow.startDragging().catch(() => {});
+
+  if (e.pointerType === "mouse") {
+    if (e.button !== 0) return;
+    appWindow.startDragging().catch(() => {});
+    return;
+  }
+
+  // Touch / pen: follow the finger by repositioning the window.
+  const bar = e.currentTarget;
+  bar.setPointerCapture(e.pointerId);
+  e.preventDefault();
+  const dpr = window.devicePixelRatio || 1;
+  const startSX = e.screenX;
+  const startSY = e.screenY;
+  let ox, oy; // window origin in logical (CSS) pixels
+  try {
+    const p = await appWindow.outerPosition();
+    ox = p.x / dpr;
+    oy = p.y / dpr;
+  } catch {
+    return;
+  }
+  let raf = 0;
+  let latest = null;
+  const flush = () => {
+    raf = 0;
+    if (!latest) return;
+    appWindow
+      .setPosition(new LogicalPosition(ox + (latest.screenX - startSX), oy + (latest.screenY - startSY)))
+      .catch(() => {});
+  };
+  const onMove = (ev) => {
+    if (ev.pointerId !== e.pointerId) return;
+    latest = ev;
+    if (!raf) raf = requestAnimationFrame(flush);
+  };
+  const end = (ev) => {
+    if (ev.pointerId !== e.pointerId) return;
+    bar.removeEventListener("pointermove", onMove);
+    bar.removeEventListener("pointerup", end);
+    bar.removeEventListener("pointercancel", end);
+    if (raf) cancelAnimationFrame(raf);
+    try {
+      bar.releasePointerCapture(e.pointerId);
+    } catch {}
+  };
+  bar.addEventListener("pointermove", onMove);
+  bar.addEventListener("pointerup", end);
+  bar.addEventListener("pointercancel", end);
 });
 
 // Prevent context menu / browser zoom gestures in the shipped app
