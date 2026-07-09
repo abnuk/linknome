@@ -16,9 +16,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: "macos-latest" # Apple Silicon (arm64) -> .dmg/.app
-          - platform: "macos-13" # Intel (x86_64) -> .dmg/.app
+          # Universal macOS (Intel + Apple Silicon) built on the arm64 runner,
+          # so we don't depend on the scarce/retired macos-13 Intel runners.
+          - platform: "macos-latest"
+            args: "--target universal-apple-darwin"
+            rust-targets: "aarch64-apple-darwin,x86_64-apple-darwin"
           - platform: "windows-latest" # -> .msi + .exe (NSIS)
+            args: ""
+            rust-targets: ""
     runs-on: ${{ matrix.platform }}
 
     steps:
@@ -35,6 +40,8 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
 
       - name: Cache Rust build
         uses: Swatinem/rust-cache@v2
@@ -58,10 +65,10 @@ jobs:
             Ableton Link tempo & meter remote.
 
             Download the installer for your platform:
-            - **macOS Apple Silicon**: `..._aarch64.dmg`
-            - **macOS Intel**: `..._x64.dmg`
+            - **macOS (Intel + Apple Silicon)**: `..._universal.dmg`
             - **Windows**: `..._x64-setup.exe` (NSIS) or `..._x64_en-US.msi`
 
             Note: builds are unsigned. On macOS, right-click the app and choose *Open* the first time (or `xattr -cr /Applications/Linknome.app`). On Windows, click *More info → Run anyway* in SmartScreen.
           releaseDraft: true
           prerelease: false
+          args: ${{ matrix.args }}
