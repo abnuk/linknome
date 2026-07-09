@@ -1,3 +1,4 @@
+mod drag;
 mod link;
 
 use tauri::Manager;
@@ -24,6 +25,7 @@ pub fn run() {
             link::set_quantum,
             link::get_state,
             link::toggle_link_enabled,
+            drag::start_touch_drag,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Linknome");

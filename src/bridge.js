@@ -62,6 +62,16 @@ export async function toggleLinkEnabled() {
   }
 }
 
+// Start the native (Rust) window drag that follows the OS cursor — used for
+// touch/pen on Windows, where webview-based dragging doesn't work.
+export async function startTouchDrag() {
+  try {
+    await invoke("start_touch_drag");
+  } catch (e) {
+    console.error("start_touch_drag failed", e);
+  }
+}
+
 export function onRemoteTempo(cb) {
   return listen("link://tempo", (e) => {
     if (interacting || performance.now() < suppressUntil) return;

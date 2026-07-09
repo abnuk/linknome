@@ -1,5 +1,5 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { LogicalSize, PhysicalPosition } from "@tauri-apps/api/dpi";
+import { LogicalSize } from "@tauri-apps/api/dpi";
 
 import {
   commitTempo,
@@ -8,6 +8,7 @@ import {
   onRemoteTempo,
   onPeers,
   setInteracting,
+  startTouchDrag,
 } from "./bridge.js";
 import { setupScrub } from "./tempo.js";
 import { setupMeter, METER_MIN, METER_MAX } from "./meter.js";
@@ -332,60 +333,20 @@ el("statusbar").addEventListener("pointerdown", async (e) => {
     return;
   }
 
-  // Touch / pen: follow the finger by repositioning the window.
-  // Work in PHYSICAL pixels with the browser's devicePixelRatio so the move
-  // is 1:1 regardless of Tauri's internal scale factor. Also drop the blur /
-  // transparency while moving — a layered (transparent + backdrop-filter)
-  // window flickers badly when repositioned rapidly on Windows.
-  const bar = e.currentTarget;
-  bar.setPointerCapture(e.pointerId);
-  e.preventDefault();
+  // Touch / pen: hand off to the native Rust drag loop, which follows the OS
+  // cursor (unaffected by the window moving, so no feedback loop). We do NOT
+  // capture the pointer or preventDefault, so Windows keeps promoting the
+  // primary touch contact to the cursor that the Rust loop reads. The panel
+  // goes opaque while moving to avoid transparent-window flicker.
   panel.classList.add("moving");
-  const dpr = window.devicePixelRatio || 1;
-  const startSX = e.screenX;
-  const startSY = e.screenY;
-  let wx, wy; // window origin in physical pixels
-  try {
-    const p = await appWindow.outerPosition();
-    wx = p.x;
-    wy = p.y;
-  } catch {
+  startTouchDrag();
+  const done = () => {
     panel.classList.remove("moving");
-    return;
-  }
-  let raf = 0;
-  let latest = null;
-  const flush = () => {
-    raf = 0;
-    if (!latest) return;
-    appWindow
-      .setPosition(
-        new PhysicalPosition(
-          Math.round(wx + (latest.screenX - startSX) * dpr),
-          Math.round(wy + (latest.screenY - startSY) * dpr),
-        ),
-      )
-      .catch(() => {});
+    window.removeEventListener("pointerup", done);
+    window.removeEventListener("pointercancel", done);
   };
-  const onMove = (ev) => {
-    if (ev.pointerId !== e.pointerId) return;
-    latest = ev;
-    if (!raf) raf = requestAnimationFrame(flush);
-  };
-  const end = (ev) => {
-    if (ev.pointerId !== e.pointerId) return;
-    bar.removeEventListener("pointermove", onMove);
-    bar.removeEventListener("pointerup", end);
-    bar.removeEventListener("pointercancel", end);
-    if (raf) cancelAnimationFrame(raf);
-    panel.classList.remove("moving");
-    try {
-      bar.releasePointerCapture(e.pointerId);
-    } catch {}
-  };
-  bar.addEventListener("pointermove", onMove);
-  bar.addEventListener("pointerup", end);
-  bar.addEventListener("pointercancel", end);
+  window.addEventListener("pointerup", done);
+  window.addEventListener("pointercancel", done);
 });
 
 // Prevent context menu / browser zoom gestures in the shipped app
