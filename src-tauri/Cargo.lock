@@ -1723,7 +1723,7 @@ dependencies = [
 
 [[package]]
 name = "linknome"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "rusty_link",
  "serde",
